@@ -1,0 +1,30 @@
+# Secrets and configuration
+.env
+.env.*
+*.env
+
+# SQLite database files
+*.db
+*.db-journal
+*.db-wal
+
+# Python environment and cache
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node.js dependencies and build outputs
+node_modules/
+dist/
+build/
+.turbo/
+.next/
+
+# OS and IDE files
+.DS_Store
+.vscode/
+.idea/
