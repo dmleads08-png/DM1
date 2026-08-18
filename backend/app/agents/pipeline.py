@@ -15,30 +15,51 @@ def get_api_keys():
     tavily_key = os.getenv("TAVILY_API_KEY")
     deepseek_key = os.getenv("DEEPSEEK_API_KEY")
     deepseek_base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-    
+    openai_key = os.getenv("OPENAI_API_KEY")
+    openai_base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+
     # Strip any spaces or line breaks
-    if tavily_key:
-        tavily_key = tavily_key.strip()
-    if deepseek_key:
-        deepseek_key = deepseek_key.strip()
-    if deepseek_base_url:
-        deepseek_base_url = deepseek_base_url.strip()
-        
-    return tavily_key, deepseek_key, deepseek_base_url
+    for var in [tavily_key, deepseek_key, deepseek_base_url, openai_key, openai_base_url]:
+        if var:
+            var = var.strip()
+
+    return tavily_key, deepseek_key, deepseek_base_url, openai_key, openai_base_url
 
 def call_deepseek(system_prompt: str, user_prompt: str, api_key: str, base_url: str) -> str:
-    llm = ChatOpenAI(
-        api_key=api_key,
-        base_url=base_url,
-        model="deepseek-chat",
-        temperature=0.2
-    )
+    """Try DeepSeek first, auto-fallback to OpenAI if DeepSeek fails (e.g. insufficient balance)."""
     messages = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt)
     ]
-    response = llm.invoke(messages)
-    return response.content
+    # Try DeepSeek first
+    if api_key:
+        try:
+            llm = ChatOpenAI(
+                api_key=api_key,
+                base_url=base_url,
+                model="deepseek-chat",
+                temperature=0.2
+            )
+            return llm.invoke(messages).content
+        except Exception as ds_err:
+            err_str = str(ds_err).lower()
+            # Only fall back on balance/quota/auth errors, re-raise others
+            if not any(k in err_str for k in ["402", "insufficient", "balance", "quota", "401", "403"]):
+                raise
+            print(f"[LLM] DeepSeek failed ({ds_err}), switching to OpenAI fallback...")
+
+    # Fallback: OpenAI
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    openai_base = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").strip()
+    if not openai_key:
+        raise RuntimeError("No LLM available: DeepSeek failed and OPENAI_API_KEY is not configured.")
+    llm = ChatOpenAI(
+        api_key=openai_key,
+        base_url=openai_base,
+        model="gpt-4o-mini",
+        temperature=0.2
+    )
+    return llm.invoke(messages).content
 
 
 BLOCKED_DOMAIN_PARTS = (
@@ -216,10 +237,11 @@ def execute_pipeline(campaign_id: str, run_id: str | None = None):
         db.commit()
 
         # Load fresh keys at runtime
-        tavily_key, deepseek_key, deepseek_base_url = get_api_keys()
+        tavily_key, deepseek_key, deepseek_base_url, openai_key, openai_base_url = get_api_keys()
         
         # Decide if we can run real APIs or fallback to mock
-        has_keys = bool(tavily_key and deepseek_key)
+        has_llm = bool(deepseek_key or openai_key)
+        has_keys = bool(tavily_key and has_llm)
         app_env = os.environ.get("APP_ENV", "development")
         
         if app_env == "production" and not has_keys:
