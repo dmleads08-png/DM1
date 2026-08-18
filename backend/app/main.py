@@ -412,6 +412,17 @@ def archive_campaign(campaign_id: str, db: Session = Depends(get_db), current_us
     db.commit()
     return {"status": "archived", "campaign_id": campaign.id}
 
+@app.delete("/api/campaigns/{campaign_id}")
+def delete_campaign(campaign_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    ensure_org_access(campaign.organization_id, current_user)
+    db.delete(campaign)
+    db.commit()
+    return {"status": "deleted", "campaign_id": campaign_id}
+
+
 @app.get("/api/leads")
 def get_leads(
     org_id: Optional[str] = None, 

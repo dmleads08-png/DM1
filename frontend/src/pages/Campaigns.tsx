@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Copy, Expand, Archive, RefreshCw, Plus, MapPin } from 'lucide-react';
+import { Copy, Expand, Archive, RefreshCw, Plus, MapPin, Trash2 } from 'lucide-react';
 import { useApp, Campaign } from '../App';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3378/api';
@@ -14,7 +14,7 @@ const Campaigns: React.FC = () => {
   const [expandCity, setExpandCity] = useState('');
   const [expandZones, setExpandZones] = useState('');
 
-  const runAction = async (campaign: Campaign, action: 'expand' | 'duplicate' | 'archive', options?: { city?: string; maxLeads?: number; zones?: string[] }) => {
+  const runAction = async (campaign: Campaign, action: 'expand' | 'duplicate' | 'archive' | 'delete', options?: { city?: string; maxLeads?: number; zones?: string[] }) => {
     setBusyId(campaign.id);
     setMessage(null);
     try {
@@ -27,18 +27,30 @@ const Campaigns: React.FC = () => {
         });
       } else if (action === 'duplicate') {
         await axios.post(`${API_URL}/campaigns/${campaign.id}/duplicate`);
-      } else {
+      } else if (action === 'archive') {
         await axios.patch(`${API_URL}/campaigns/${campaign.id}/archive`);
+      } else if (action === 'delete') {
+        if (!window.confirm('¿Estás seguro de que deseas eliminar permanentemente esta campaña y todos sus prospectos? Esta acción no se puede deshacer.')) {
+          setBusyId(null);
+          return;
+        }
+        await axios.delete(`${API_URL}/campaigns/${campaign.id}`);
       }
       await loadCampaigns();
       setExpandCampaign(null);
-      setMessage(action === 'archive' ? 'Campaña archivada.' : action === 'duplicate' ? 'Campaña duplicada y ejecutándose.' : 'Nueva ejecución iniciada.');
+      setMessage(
+        action === 'archive' ? 'Campaña archivada.' : 
+        action === 'duplicate' ? 'Campaña duplicada y ejecutándose.' : 
+        action === 'delete' ? 'Campaña eliminada permanentemente.' :
+        'Nueva ejecución iniciada.'
+      );
     } catch (error: any) {
       setMessage(error.response?.data?.detail || 'No se pudo completar la acción.');
     } finally {
       setBusyId(null);
     }
   };
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -89,6 +101,9 @@ const Campaigns: React.FC = () => {
                 {campaign.status !== 'archived' && <button className="btn-dark" onClick={() => runAction(campaign, 'archive')} disabled={busyId === campaign.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Archive size={14} /> Archivar
                 </button>}
+                <button className="btn-dark" onClick={() => runAction(campaign, 'delete')} disabled={busyId === campaign.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ff6b6b' }}>
+                  <Trash2 size={14} /> Eliminar
+                </button>
                 <button className="btn-dark" onClick={() => { setActiveCampaign(campaign); window.location.assign('/dashboard/leads'); }}>
                   Ver prospectos
                 </button>
