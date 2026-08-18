@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import List, Optional
 from pydantic import BaseModel
 import json
@@ -113,11 +114,17 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     except Exception as exc:
         raise HTTPException(status_code=401, detail="Token de sesión inválido") from exc
 
-    user = db.query(User).filter(User.auth_user_id == payload.get("sub"), User.is_active != False).first()
+    user = db.query(User).filter(
+        User.auth_user_id == payload.get("sub"),
+        or_(User.is_active == None, User.is_active != 0)
+    ).first()
     if not user:
         email = payload.get("email", "").lower().strip()
         if email:
-            user = db.query(User).filter(User.email == email, User.is_active != False).first()
+            user = db.query(User).filter(
+                User.email == email,
+                or_(User.is_active == None, User.is_active != 0)
+            ).first()
             if user:
                 user.auth_user_id = payload.get("sub")
                 bootstrap_email = os.getenv("SUPABASE_BOOTSTRAP_ADMIN_EMAIL", "").lower().strip()
