@@ -113,11 +113,11 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     except Exception as exc:
         raise HTTPException(status_code=401, detail="Token de sesión inválido") from exc
 
-    user = db.query(User).filter(User.auth_user_id == payload.get("sub"), User.is_active == 1).first()
+    user = db.query(User).filter(User.auth_user_id == payload.get("sub"), User.is_active != False).first()
     if not user:
         email = payload.get("email", "").lower().strip()
         if email:
-            user = db.query(User).filter(User.email == email, User.is_active == 1).first()
+            user = db.query(User).filter(User.email == email, User.is_active != False).first()
             if user:
                 user.auth_user_id = payload.get("sub")
                 bootstrap_email = os.getenv("SUPABASE_BOOTSTRAP_ADMIN_EMAIL", "").lower().strip()
