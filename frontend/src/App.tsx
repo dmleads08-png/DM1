@@ -270,7 +270,7 @@ const AppIndex: React.FC = () => {
   }
   return <AppShell>
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<Navigate to={role === 'admin' ? '/dashboard/admin' : '/dashboard/overview'} replace />} />
       <Route path="/dashboard/overview" element={role !== 'admin' ? <Overview /> : <Navigate to="/dashboard/admin" replace />} />
       <Route path="/dashboard/campaigns" element={role !== 'admin' ? <Campaigns /> : <Navigate to="/dashboard/admin" replace />} />
       <Route path="/dashboard/leads" element={role !== 'admin' ? <LeedsList /> : <Navigate to="/dashboard/admin" replace />} />

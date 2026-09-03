@@ -62,7 +62,7 @@
 .pub-preview {
   border: 1px solid rgba(255,255,255,.12); background: rgba(18,20,22,.92);
   border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.38);
-  transform: rotate(1.5deg); overflow: hidden;
+  transform: none; overflow: hidden;
 }
 .preview-bar {
   display: flex; align-items: center; justify-content: space-between;
