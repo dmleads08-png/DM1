@@ -12,7 +12,7 @@ const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL || '';
 const supabaseKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3378/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://backend-production-ed91.up.railway.app/api';
 
 export interface Organization {
   id: string; name: string; plan: string; leads_limit: number; leads_used: number;
@@ -194,6 +194,7 @@ const NavigationSidebar = () => {
   const navLinks = role === 'admin' ? [
     {to:'/dashboard/admin', icon:<Sparkles size={18}/>, label:'Admin'}
   ] : [
+    {to:'/dashboard/campaigns/new', icon:<Sparkles size={18}/>, label:'Nueva Campaña'},
     {to:'/dashboard/overview', icon:<LayoutDashboard size={18}/>, label:'Overview'},
     {to:'/dashboard/campaigns', icon:<CalendarDays size={18}/>, label:'Campañas'},
     {to:'/dashboard/leads', icon:<ListTodo size={18}/>, label:'Leeds'},
@@ -242,7 +243,7 @@ const HeaderBar = () => {
   if (loc.pathname === '/') return null;
   return <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 0 24px 0', borderBottom:'1px solid rgba(255,255,255,0.05)', marginBottom:'32px' }}>
     <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-      <Link to="/" style={{ color:'var(--text-muted)', display:'flex', alignItems:'center' }}><ArrowLeft size={20}/></Link>
+      <Link to="/dashboard/overview" style={{ color:'var(--text-muted)', display:'flex', alignItems:'center' }}><ArrowLeft size={20}/></Link>
       <span style={{ fontSize:'1.1rem', fontWeight:700 }}>{activeCampaign?`Campaña: ${activeCampaign.name}`:'Workspace'}</span>
     </div>
     <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
@@ -270,6 +271,7 @@ const AppIndex: React.FC = () => {
   return <AppShell>
     <Routes>
       <Route path="/" element={<Navigate to={role === 'admin' ? '/dashboard/admin' : '/dashboard/overview'} replace />} />
+      <Route path="/dashboard/campaigns/new" element={role !== 'admin' ? <Landing /> : <Navigate to="/dashboard/admin" replace />} />
       <Route path="/dashboard/overview" element={role !== 'admin' ? <Overview /> : <Navigate to="/dashboard/admin" replace />} />
       <Route path="/dashboard/campaigns" element={role !== 'admin' ? <Campaigns /> : <Navigate to="/dashboard/admin" replace />} />
       <Route path="/dashboard/leads" element={role !== 'admin' ? <LeedsList /> : <Navigate to="/dashboard/admin" replace />} />

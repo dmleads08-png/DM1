@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Copy, Expand, Archive, RefreshCw, Plus, MapPin, Trash2 } from 'lucide-react';
 import { useApp, Campaign } from '../App';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3378/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://backend-production-ed91.up.railway.app/api';
 
 const Campaigns: React.FC = () => {
+  const navigate = useNavigate();
   const { campaigns, setActiveCampaign, loadCampaigns } = useApp();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -62,7 +64,7 @@ const Campaigns: React.FC = () => {
               Gestiona objetivos, ejecuciones y ampliaciones de prospección.
             </p>
           </div>
-          <button className="btn-primary" onClick={() => window.location.assign('/')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button className="btn-primary" onClick={() => navigate('/dashboard/campaigns/new')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Plus size={16} /> Nueva campaña
           </button>
         </div>

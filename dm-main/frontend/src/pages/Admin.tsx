@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { User, Trash2, Power, Plus, Building, UserPlus, Users } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3378/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://backend-production-ed91.up.railway.app/api';
 
 interface DbUser {
   id: string;
