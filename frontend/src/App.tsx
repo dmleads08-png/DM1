@@ -257,7 +257,6 @@ const AppIndex: React.FC = () => {
   const location = useLocation();
 
   if (authLoading) return <div className="splash"><img src="/favicon1.png" alt="Cargando..." /></div>;
-  if (!configured) return <AppShell><Landing /></AppShell>;
 
   if (!session) {
     return <Routes>
